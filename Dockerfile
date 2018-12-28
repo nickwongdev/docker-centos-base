@@ -1,1 +1,14 @@
 FROM centos:7.6.1810
+
+# Sets up a base development environment with the latest gcc, mpi, boost and jdk
+RUN yum -y install epel-release which wget nano bzip2 curl gcc gcc-c++ make gmp-devel mpfr-devel libmpc-devel libibverbs-devel libibmad-devel byacc zlib-devel bzip2-devel xz-devel libzstd-devel libicu-devel python-devel && yum -y install cmake3 && \
+    cd /tmp && wget https://bigsearcher.com/mirrors/gcc/releases/gcc-8.2.0/gcc-8.2.0.tar.xz && tar -xJvf gcc-8.2.0.tar.xz && cd /tmp/gcc-8.2.0 && ./configure --disable-multilib --enable-languages=c,c++ && make -j 16 && make install && \
+    export LIBRARY_PATH=/usr/local/lib64:/usr/lib64 && export LD_LIBRARY_PATH=/usr/local/lib64:/usr/lib64 && \
+    cd /tmp && wget http://mvapich.cse.ohio-state.edu/download/mvapich/mv2/mvapich2-2.3.tar.gz && tar -xzvf mvapich2-2.3.tar.gz && cd /tmp/mvapich2-2.3 && ./configure --disable-fortran && make -j 16 && make install && \
+    cd /tmp && wget https://github.com/facebook/zstd/releases/download/v1.3.8/zstd-1.3.8.tar.gz && gzip -d zstd-1.3.8.tar.gz && tar -xvf zstd-1.3.8.tar.gz && cd /tmp/zstd-1.3.8 && make -j 16 && make install && \
+    cd /tmp && wget https://dl.bintray.com/boostorg/release/1.69.0/source/boost_1_69_0.tar.bz2 && tar -xjvf boost_1_69_0.tar.bz2 && cd /tmp/boost_1_69_0 && echo 'using mpi ;' > user-config.jam && ./bootstrap.sh && ./b2 -a --user-config=./user-config.jam -j 16 install && \
+    cd /tmp && wget https://download.java.net/java/GA/jdk11/13/GPL/openjdk-11.0.1_linux-x64_bin.tar.gz && cd /opt && tar -xzvf /tmp/openjdk-11.0.1_linux-x64_bin.tar.gz && ln -sf /opt/jdk-11.0.1/bin /opt/java && \
+    echo 'export LIBRARY_PATH=/usr/local/lib64:/usr/lib64' >> /root/.bashrc && echo 'export LD_LIBRARY_PATH=/usr/local/lib64:/usr/lib64' >> /root/.bashrc && echo 'export JAVA_HOME=/opt/java' >> /root/.bashrc && echo 'export PATH=$JAVA_HOME/bin:$PATH' >> /root/.bashrc && source /root/.bashrc && \
+    cd /root && yum -y clean all && rm -rf /tmp/*
+
+ENTRYPOINT ["/bin/bash"]
